@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Mission V Wuppertal — 1896 Einheiten</title>
+<meta name="description" content="Live-Stand der Mission V Wuppertal: 1896 Einheiten in 9 Wochen." />
+<meta name="theme-color" content="#08090A" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#08090A;
+    --ink-2:#111315;
+    --line:#1E2224;
+    --paper:#F2F4F1;
+    --go:#52C64A;
+    --stop:#F0402A;
+    --alarm:#FF9F1C;
+    --signal:#0FBF8F;
+    --dim:#6B7370;
+
+    --track-h: clamp(52px, 12vw, 96px);
+    --pad: clamp(18px, 5vw, 56px);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    -webkit-font-smoothing:antialiased;
+    padding:var(--pad);
+    overflow-x:hidden;
+  }
+
+  /* ---------- Kopf ---------- */
+  .top{
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    padding-bottom:clamp(16px,3vh,26px);
+  }
+  h1{
+    font-family:"Anton", Impact, sans-serif;
+    font-weight:400;
+    font-size:clamp(38px,9vw,76px);
+    line-height:.9;
+    letter-spacing:.01em;
+    text-transform:uppercase;
+    color:var(--signal);
+  }
+  h1 .v{color:var(--paper)}
+  h1 .place{
+    display:block;
+    color:var(--paper);
+    font-size:.52em;
+    letter-spacing:.12em;
+    margin-top:.18em;
+  }
+  .sub{
+    margin-top:12px;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--dim);
+  }
+
+  .clock{
+    display:flex;
+    justify-content:center;
+    gap:clamp(14px,4vw,34px);
+    margin-top:clamp(16px,3vh,26px);
+  }
+  .unit{text-align:center;min-width:46px}
+  .unit b{
+    display:block;
+    font-family:"Anton", Impact, sans-serif;
+    font-weight:400;
+    font-size:clamp(26px,6vw,44px);
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  .unit span{
+    display:block;
+    margin-top:6px;
+    font-size:9px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--signal);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    min-height:calc(100svh - var(--pad) * 2);
+    display:flex;
+    flex-direction:column;
+    gap:clamp(22px,5vh,44px);
+  }
+  .hero main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:clamp(24px,5vh,48px);
+  }
+
+  .bar{position:relative}
+  .flag{position:relative;height:clamp(56px,10vw,90px);margin-bottom:6px}
+  .flag-inner{
+    position:absolute;
+    left:0;bottom:0;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transition:left .7s cubic-bezier(.22,.9,.25,1);
+    will-change:left;
+  }
+  #count{
+    font-family:"Anton", Impact, sans-serif;
+    font-weight:400;
+    font-size:clamp(44px,10vw,82px);
+    line-height:.9;
+    font-variant-numeric:tabular-nums;
+    color:var(--go);
+  }
+  .flag-inner::after{content:"";width:2px;height:10px;background:var(--go);margin-top:4px}
+  .bump{animation:bump .45s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+  .track{
+    position:relative;
+    height:var(--track-h);
+    border:3px solid var(--paper);
+    border-radius:3px;
+    background:var(--ink-2);
+  }
+  .fill{
+    position:absolute;
+    inset:3px auto 3px 3px;
+    width:0;
+    background:var(--go);
+    background-image:repeating-linear-gradient(90deg,
+      rgba(255,255,255,.07) 0 3px, rgba(0,0,0,0) 3px 11px);
+    transition:width .7s cubic-bezier(.22,.9,.25,1);
+    will-change:width;
+  }
+  .fill::after{
+    content:"";
+    position:absolute;
+    top:0;bottom:0;right:-11px;
+    width:13px;
+    background:var(--go);
+    clip-path:polygon(0 0, 62% 5%, 24% 13%, 88% 21%, 38% 31%, 96% 42%, 30% 53%, 80% 63%, 22% 73%, 70% 84%, 16% 93%, 0 100%);
+  }
+  .fill.empty::after,
+  .fill.full::after{display:none}
+
+  .pacer{
+    position:absolute;
+    top:-9px;bottom:-9px;
+    width:2px;
+    background:var(--signal);
+    opacity:.85;
+    transition:left .7s cubic-bezier(.22,.9,.25,1);
+  }
+  .pacer::after{
+    content:"SOLL";
+    position:absolute;
+    top:-17px;left:50%;
+    transform:translateX(-50%);
+    font-size:9px;
+    letter-spacing:.18em;
+    color:var(--signal);
+  }
+  .pacer[hidden]{display:none}
+
+  .rescue-line{
+    position:absolute;
+    top:-3px;
+    bottom:-16px;
+    width:2px;
+    background:var(--alarm);
+    opacity:.9;
+  }
+  .rescue-line::before{
+    content:"";
+    position:absolute;
+    left:-3px;top:-3px;
+    width:8px;height:8px;
+    background:var(--alarm);
+    transform:rotate(45deg);
+  }
+
+  .ends{
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    margin-top:12px;
+    font-family:"Anton", Impact, sans-serif;
+    font-size:clamp(20px,4vw,34px);
+    color:var(--signal);
+  }
+  .ends .rescue-mark{
+    position:absolute;
+    transform:translateX(-50%);
+    color:var(--alarm);
+    font-size:clamp(15px,3vw,26px);
+    white-space:nowrap;
+  }
+
+  /* ---------- Bedienung ---------- */
+  .whoami{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:10px;
+    font-size:12px;
+    color:var(--dim);
+    flex-wrap:wrap;
+  }
+  .whoami b{color:var(--paper);font-size:14px;letter-spacing:.06em}
+  .whoami button{
+    all:unset;
+    cursor:pointer;
+    color:var(--signal);
+    border-bottom:1px solid currentColor;
+    font-size:11px;
+  }
+  .whoami button:focus-visible{outline:2px solid var(--paper);outline-offset:3px}
+
+  .controls{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:clamp(8px,1.6vw,14px);
+  }
+  .controls button{
+    min-height:clamp(62px,11vw,104px);
+    background:transparent;
+    border:3px solid var(--go);
+    border-radius:4px;
+    color:var(--go);
+    font-family:"Anton", Impact, sans-serif;
+    font-size:clamp(20px,4.6vw,40px);
+    letter-spacing:.02em;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease, transform .08s ease, opacity .15s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .controls .minus{
+    grid-column:1 / -1;
+    justify-self:center;
+    width:min(100%,240px);
+    min-height:clamp(46px,8vw,62px);
+    border-width:2px;
+    border-color:var(--stop);
+    color:var(--stop);
+    font-size:clamp(20px,4vw,30px);
+    opacity:.75;
+  }
+  .controls .minus:hover,
+  .controls .minus:focus-visible{opacity:1}
+  .controls button:hover{background:var(--go);color:var(--ink)}
+  .controls .minus:hover{background:var(--stop);color:var(--ink)}
+  .controls button:active{transform:translateY(2px)}
+  .controls button:focus-visible{outline:3px solid var(--paper);outline-offset:4px}
+  .controls button[disabled]{opacity:.3;cursor:not-allowed;transform:none}
+  .controls button[disabled]:hover{background:transparent;color:inherit}
+
+  /* ---------- Fuß des Hero ---------- */
+  .foot{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 28px;
+    justify-content:space-between;
+    align-items:center;
+    border-top:1px solid var(--line);
+    padding-top:14px;
+    font-size:12px;
+    color:var(--dim);
+  }
+  .foot b{color:var(--paper);font-weight:700}
+  .foot #pace{color:rgba(82,198,74,.82)}
+  .foot #pace b{color:var(--go);font-weight:700}
+  .foot .rescue{margin-top:7px;color:rgba(255,159,28,.82)}
+  .foot .rescue b{color:var(--alarm);font-weight:700}
+  .status{display:flex;align-items:center;gap:8px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+  .dot.live{background:var(--go);box-shadow:0 0 0 0 rgba(82,198,74,.6);animation:pulse 2.4s infinite}
+  .dot.warn{background:var(--stop)}
+  @keyframes pulse{70%{box-shadow:0 0 0 7px rgba(82,198,74,0)}100%{box-shadow:0 0 0 0 rgba(82,198,74,0)}}
+
+  .scroll-hint{
+    text-align:center;
+    font-size:10px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--dim);
+    padding:clamp(20px,4vh,34px) 0 0;
+  }
+  .scroll-hint a{color:inherit;text-decoration:none}
+  .scroll-hint a:hover{color:var(--signal)}
+
+  /* ---------- Teams ---------- */
+  .team{padding:clamp(40px,9vh,90px) 0 clamp(20px,4vh,40px);text-align:center}
+  .team h2{
+    font-family:"Anton", Impact, sans-serif;
+    font-weight:400;
+    font-size:clamp(22px,4.5vw,34px);
+    text-transform:uppercase;
+    letter-spacing:.02em;
+  }
+  .team .lede{
+    margin-top:8px;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--dim);
+  }
+  .rows{margin-top:clamp(22px,4vh,38px);display:flex;flex-direction:column;text-align:left}
+
+  .row{
+    display:grid;
+    grid-template-columns:minmax(84px,1fr) 2.6fr auto;
+    align-items:center;
+    gap:clamp(10px,2.4vw,22px);
+    padding:clamp(11px,2vh,16px) 0;
+    border-top:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:1px solid var(--line)}
+  .row .who{
+    font-size:clamp(12px,2.6vw,15px);
+    letter-spacing:.06em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .row.me .who{color:var(--signal);font-weight:700}
+  .row.me .who::after{content:" ·";color:var(--signal)}
+
+  .mini{
+    position:relative;
+    height:10px;
+    border:1px solid #33393A;
+    border-radius:2px;
+    background:var(--ink-2);
+    overflow:hidden;
+  }
+  .mini i{
+    position:absolute;
+    inset:0 auto 0 0;
+    width:0;
+    background:var(--go);
+    transition:width .6s cubic-bezier(.22,.9,.25,1);
+  }
+  .row.me .mini{border-color:var(--signal)}
+  .row.done .mini i{background:var(--signal)}
+
+  .score{
+    font-family:"Anton", Impact, sans-serif;
+    font-size:clamp(15px,3.2vw,22px);
+    font-variant-numeric:tabular-nums;
+    color:var(--dim);
+    white-space:nowrap;
+  }
+  .score b{color:var(--paper);font-weight:400}
+  .row.done .score b{color:var(--signal)}
+
+  /* ---------- Teamauswahl ---------- */
+  .gate{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    background:rgba(8,9,10,.97);
+    backdrop-filter:blur(6px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:var(--pad);
+  }
+  .gate[hidden]{display:none}
+  .gate-box{width:min(400px,100%);text-align:center}
+  .gate h3{
+    font-family:"Anton", Impact, sans-serif;
+    font-weight:400;
+    font-size:clamp(24px,6vw,42px);
+    text-transform:uppercase;
+    color:var(--signal);
+  }
+  .gate p{margin-top:10px;font-size:12px;color:var(--dim);line-height:1.6}
+  .names{
+    margin-top:clamp(22px,4vh,34px);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .names button{
+    padding:16px 10px;
+    background:transparent;
+    border:2px solid #2A3032;
+    border-radius:4px;
+    color:var(--paper);
+    font-family:"JetBrains Mono",monospace;
+    font-size:14px;
+    letter-spacing:.06em;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .names button:hover{border-color:var(--go);color:var(--go)}
+  .names button:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate" hidden>
+  <div class="gate-box">
+    <h3>Welches Team?</h3>
+    <p>Wähle dein Team. Kein Passwort — die Auswahl bleibt auf diesem Gerät gespeichert.</p>
+    <div class="names" id="names"></div>
+  </div>
+</div>
+
+<div class="hero">
+  <header class="top">
+    <h1>Mission <span class="v">V</span><span class="place">Wuppertal</span></h1>
+    <p class="sub">1896 Einheiten · 9 Wochen · Ein Bezirk</p>
+    <div class="clock" aria-label="Verbleibende Zeit">
+      <div class="unit"><b id="d">–</b><span>Tage</span></div>
+      <div class="unit"><b id="h">–</b><span>Std</span></div>
+      <div class="unit"><b id="m">–</b><span>Min</span></div>
+      <div class="unit"><b id="s">–</b><span>Sek</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="bar">
+      <div class="flag"><div class="flag-inner" id="flag"><span id="count">0</span></div></div>
+      <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="1896" aria-valuenow="0" aria-label="Fortschritt des Bezirks" id="track">
+        <div class="fill empty" id="fill"></div>
+        <div class="pacer" id="pacer" hidden></div>
+        <div class="rescue-line" id="rescue-line" hidden></div>
+      </div>
+      <div class="ends">
+        <span>0</span>
+        <span class="rescue-mark" id="rescue-mark" hidden>1328</span>
+        <span>1896</span>
+      </div>
+    </section>
+
+    <p class="whoami">
+      <span>Du zählst für</span>
+      <b id="whoami-name">—</b>
+      <button id="switch" type="button">Team wechseln</button>
+    </p>
+
+    <section class="controls" id="controls">
+      <button data-step="1"  aria-label="Eine Einheit hinzufügen">+1</button>
+      <button data-step="5"  aria-label="Fünf Einheiten hinzufügen">+5</button>
+      <button data-step="10" aria-label="Zehn Einheiten hinzufügen">+10</button>
+      <button data-step="20" aria-label="Zwanzig Einheiten hinzufügen">+20</button>
+      <button data-step="30" aria-label="Dreißig Einheiten hinzufügen">+30</button>
+      <button class="minus" data-step="-1" aria-label="Eine Einheit abziehen">−1</button>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div>
+      <p id="pace">Tempo wird berechnet …</p>
+      <p class="rescue" id="rescue"></p>
+    </div>
+    <p class="status"><span class="dot" id="dot"></span><span id="state">Verbinde …</span></p>
+  </footer>
+
+  <p class="scroll-hint"><a href="#team">Teamstände ↓</a></p>
+</div>
+
+<section class="team" id="team">
+  <h2>Teamstände</h2>
+  <p class="lede">Jedes Team mit eigenem Ziel</p>
+  <div class="rows" id="rows"></div>
+</section>
+
+<script type="module">
+/* ============================================================
+   1) FIREBASE-ZUGANG
+   ============================================================ */
+// Eigenes Firebase-Projekt fuer Wuppertal — hier die Werte des NEUEN Projekts eintragen.
+const firebaseConfig = {
+  apiKey: "AIzaSyAeqvRVe6ck8f_SB6PVu8h6Z2EAQEVgsoI",
+  authDomain: "mission-v-wuppertal.firebaseapp.com",
+  databaseURL: "https://mission-v-wuppertal-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mission-v-wuppertal",
+  storageBucket: "mission-v-wuppertal.firebasestorage.app",
+  messagingSenderId: "265157189551",
+  appId: "1:265157189551:web:cc13337bb069498866595a"
+};
+
+const DB_PATH = "wuppertal";
+
+/* ============================================================
+   2) MISSION — Ziel, Zeitraum, Teams
+   ============================================================ */
+const GOAL   = 1896;                               // Hauptziel des Bezirks
+const RESCUE = 1328;                               // Notfallziel
+const START = new Date("2026-07-27T12:00:00");
+const END   = new Date("2026-09-28T11:59:00");
+
+// Reihenfolge = Reihenfolge in der Liste.
+// key: fester Schlüssel in der Datenbank — nie ändern, daran hängt der Stand.
+const TEAMS = [
+  { key:"robert",  name:"Robert",  goal:584 },
+  { key:"joerg",   name:"Jörg",    goal:146 },
+  { key:"claudia", name:"Claudia", goal:729 },
+  { key:"sandra",  name:"Sandra",  goal:438 }
+];
+
+/* ============================================================
+   ab hier musst du nichts mehr ändern
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const clamp = (n,a,b) => Math.min(b, Math.max(a,n));
+
+let counts = Object.fromEntries(TEAMS.map(t => [t.key, 0]));
+let me = null;
+let push = null;
+
+/* ---- Zeilen einmalig bauen ---- */
+const rowEls = {};
+TEAMS.forEach(t => {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML =
+    `<span class="who">${t.name}</span>` +
+    `<span class="mini"><i></i></span>` +
+    `<span class="score"><b>0</b>/${t.goal}</span>`;
+  $("rows").appendChild(row);
+  rowEls[t.key] = { row, fill: row.querySelector("i"), score: row.querySelector("b") };
+});
+
+/* ---- Anzeige ---- */
+function render(animate = true){
+  const total = TEAMS.reduce((s,t) => s + (counts[t.key] || 0), 0);
+  const pct = clamp((total / GOAL) * 100, 0, 100);
+
+  $("count").textContent = total;
+  $("fill").style.width = `calc(${pct}% - ${pct === 0 ? 0 : 6}px)`;
+  $("fill").classList.toggle("empty", total === 0);
+  $("fill").classList.toggle("full", total >= GOAL);
+  $("flag").style.left = `clamp(30px, ${pct}%, calc(100% - 30px))`;
+  $("track").setAttribute("aria-valuenow", total);
+  document.title = `${total}/${GOAL} — Mission V Wuppertal`;
+
+  TEAMS.forEach(t => {
+    const v  = counts[t.key] || 0;
+    const el = rowEls[t.key];
+    el.fill.style.width = clamp((v / t.goal) * 100, 0, 100) + "%";
+    el.score.textContent = v;
+    el.row.classList.toggle("done", v >= t.goal);
+    el.row.classList.toggle("me", t.key === me);
+  });
+
+  const mine = me ? (counts[me] || 0) : 0;
+  document.querySelectorAll("#controls button").forEach(b => {
+    b.disabled = !me || (Number(b.dataset.step) < 0 && mine <= 0);
+  });
+
+  if (animate){
+    const el = $("count");
+    el.classList.remove("bump");
+    void el.offsetWidth;
+    el.classList.add("bump");
+  }
+  updatePace(total);
+}
+
+/* ---- Countdown und Tempo ---- */
+function updateClock(){
+  const t = Math.max(0, END - Date.now());
+  $("d").textContent = Math.floor(t / 864e5);
+  $("h").textContent = String(Math.floor(t / 36e5) % 24).padStart(2,"0");
+  $("m").textContent = String(Math.floor(t / 6e4) % 60).padStart(2,"0");
+  $("s").textContent = String(Math.floor(t / 1000) % 60).padStart(2,"0");
+}
+
+function updatePace(total = TEAMS.reduce((s,t) => s + (counts[t.key] || 0), 0)){
+  const span    = END - START;
+  const elapsed = clamp(Date.now() - START, 0, span);
+  const target  = Math.round((elapsed / span) * GOAL);
+
+  $("pacer").hidden = false;
+  $("pacer").style.left = `${(target / GOAL) * 100}%`;
+
+  const diff = total - target;
+  const lage = diff > 0 ? `<b>${diff}</b> Einheiten im Vorsprung`
+             : diff < 0 ? `<b>${-diff}</b> Einheiten hinter dem Tagesziel`
+             : `genau im Tagesziel`;
+
+  const gap = total - RESCUE;
+  $("rescue").innerHTML =
+      gap > 0 ? `Notfallziel ${RESCUE} · <b>${gap}</b> Einheiten im Vorsprung zum Notfall`
+    : gap < 0 ? `Notfallziel ${RESCUE} · <b>${-gap}</b> Einheiten hinter dem Notfallziel`
+    :           `Notfallziel ${RESCUE} · genau erreicht`;
+
+  if (Date.now() >= END){
+    $("pace").innerHTML = total >= GOAL
+      ? `<b>Geschafft.</b> ${total} von ${GOAL} Einheiten.`
+      : `Zeit abgelaufen bei <b>${total}</b> von ${GOAL} Einheiten.`;
+    return;
+  }
+  if (total >= GOAL){
+    $("pace").innerHTML = `<b>Ziel erreicht.</b> ${total} von ${GOAL} · ${lage}`;
+    return;
+  }
+  const daysLeft = Math.max(1, Math.ceil((END - Date.now()) / 864e5));
+  const perDay   = ((GOAL - total) / daysLeft).toFixed(1);
+  $("pace").innerHTML =
+    `Noch <b>${GOAL - total}</b> Einheiten in <b>${daysLeft}</b> Tagen · <b>${perDay}</b> pro Tag · ${lage}`;
+}
+
+function setState(text, kind){
+  $("state").textContent = text;
+  $("dot").className = "dot" + (kind ? " " + kind : "");
+}
+
+/* ---- Teamauswahl ---- */
+TEAMS.forEach(t => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = t.name;
+  b.addEventListener("click", () => selectMe(t.key));
+  $("names").appendChild(b);
+});
+
+function selectMe(key){
+  me = key;
+  try{ localStorage.setItem("missionVWuppertal.me", key); }catch(_){}
+  $("whoami-name").textContent = TEAMS.find(t => t.key === key).name;
+  $("gate").hidden = true;
+  render(false);
+}
+$("switch").addEventListener("click", () => { $("gate").hidden = false; });
+
+let saved = null;
+try{ saved = localStorage.getItem("missionVWuppertal.me"); }catch(_){}
+if (saved && TEAMS.some(t => t.key === saved)) selectMe(saved);
+else $("gate").hidden = false;
+
+/* ---- Klicks ---- */
+$("controls").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || b.disabled || !me) return;
+  const delta = Number(b.dataset.step);
+  const next  = Math.max(0, (counts[me] || 0) + delta);
+  if (next === counts[me]) return;
+  counts[me] = next;          // sofort sichtbar
+  render();
+  push?.(me, delta);
+});
+
+/* ---- Firebase ---- */
+async function connect(){
+  if (firebaseConfig.apiKey.startsWith("DEIN")){
+    localMode("Testmodus — nur auf diesem Gerät");
+    return;
+  }
+  try{
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const { getDatabase, ref, onValue, runTransaction, set, serverTimestamp }
+      = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+
+    const db       = getDatabase(initializeApp(firebaseConfig));
+    const teamsRef = ref(db, `${DB_PATH}/teams`);
+
+    onValue(teamsRef, snap => {
+      const data = snap.val() || {};
+      TEAMS.forEach(t => { counts[t.key] = Number(data[t.key]) || 0; });
+      setState("Live", "live");
+      render(false);
+    }, err => {
+      console.error(err);
+      localMode("Keine Verbindung — Stand wird nicht geteilt");
+    });
+
+    push = async (key, delta) => {
+      try{
+        await runTransaction(ref(db, `${DB_PATH}/teams/${key}`),
+          v => Math.max(0, (Number(v) || 0) + delta));
+        set(ref(db, `${DB_PATH}/updatedAt`), serverTimestamp());
+      }catch(e){
+        console.error(e);
+        setState("Speichern fehlgeschlagen — nochmal tippen", "warn");
+      }
+    };
+  }catch(e){
+    console.error(e);
+    localMode("Keine Verbindung — Stand wird nicht geteilt");
+  }
+}
+
+/* ---- Notlauf ohne Firebase ---- */
+function localMode(msg){
+  setState(msg, "warn");
+  try{ counts = { ...counts, ...JSON.parse(localStorage.getItem("missionVWuppertal.counts") || "{}") }; }catch(_){}
+  push = () => { try{ localStorage.setItem("missionVWuppertal.counts", JSON.stringify(counts)); }catch(_){} };
+  render(false);
+}
+
+(function placeRescue(){
+  const pct = clamp((RESCUE / GOAL) * 100, 0, 100);
+  const line = $("rescue-line");
+  const mark = $("rescue-mark");
+  line.style.left = `calc(${pct}% - 1px)`;
+  line.hidden = false;
+  mark.style.left = `${pct}%`;
+  mark.textContent = RESCUE;
+  mark.hidden = false;
+})();
+
+render(false);
+updateClock();
+setInterval(updateClock, 1000);
+setInterval(() => updatePace(), 60000);
+connect();
+</script>
+</body>
+</html>
