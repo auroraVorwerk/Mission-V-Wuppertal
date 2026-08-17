@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Mission V Wuppertal — 1895 Einheiten</title>
-<meta name="description" content="Live-Stand der Mission V Wuppertal: 1895 Einheiten in 9 Wochen." />
+<title>Mission V Wuppertal — 1896 Einheiten</title>
+<meta name="description" content="Live-Stand der Mission V Wuppertal: 1896 Einheiten in 9 Wochen." />
 <meta name="theme-color" content="#08090A" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -431,7 +431,7 @@
 <div class="hero">
   <header class="top">
     <h1>Mission <span class="v">V</span><span class="place">Wuppertal</span></h1>
-    <p class="sub">1895 Einheiten · 9 Wochen · Ein Bezirk</p>
+    <p class="sub">1896 Einheiten · 9 Wochen · Ein Bezirk</p>
     <div class="clock" aria-label="Verbleibende Zeit">
       <div class="unit"><b id="d">–</b><span>Tage</span></div>
       <div class="unit"><b id="h">–</b><span>Std</span></div>
@@ -443,7 +443,7 @@
   <main>
     <section class="bar">
       <div class="flag"><div class="flag-inner" id="flag"><span id="count">0</span></div></div>
-      <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="1895" aria-valuenow="0" aria-label="Fortschritt des Bezirks" id="track">
+      <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="1896" aria-valuenow="0" aria-label="Fortschritt des Bezirks" id="track">
         <div class="fill empty" id="fill"></div>
         <div class="pacer" id="pacer" hidden></div>
         <div class="rescue-line" id="rescue-line" hidden></div>
@@ -451,7 +451,7 @@
       <div class="ends">
         <span>0</span>
         <span class="rescue-mark" id="rescue-mark" hidden>1328</span>
-        <span>1895</span>
+        <span>1896</span>
       </div>
     </section>
 
@@ -508,7 +508,7 @@ const DB_PATH = "wuppertal";
 /* ============================================================
    2) MISSION — Ziel, Zeitraum, Teams
    ============================================================ */
-const GOAL   = 1895;                               // Hauptziel des Bezirks
+const GOAL   = 1896;                               // Hauptziel des Bezirks
 const RESCUE = 1328;                               // Notfallziel
 const START = new Date("2026-07-27T12:00:00");
 const END   = new Date("2026-09-28T11:59:00");
@@ -591,39 +591,51 @@ function updateClock(){
   $("s").textContent = String(Math.floor(t / 1000) % 60).padStart(2,"0");
 }
 
+function paceLine(total, goal, w){
+  const span    = END - START;
+  const elapsed = clamp(Date.now() - START, 0, span);
+  const target  = Math.round((elapsed / span) * goal);
+  const diff    = total - target;
+
+  const lage = diff > 0 ? `<b>${diff}</b> ${w.ahead}`
+             : diff < 0 ? `<b>${-diff}</b> ${w.behind}`
+             : w.even;
+
+  if (Date.now() >= END){
+    return total >= goal
+      ? `<b>${w.done}</b> ${total} von ${goal} Einheiten.`
+      : `Zeit abgelaufen bei <b>${total}</b> von ${goal} Einheiten.`;
+  }
+  if (total >= goal){
+    return `<b>${w.reached}</b> ${total} von ${goal} · ${lage}`;
+  }
+  const daysLeft = Math.max(1, Math.ceil((END - Date.now()) / 864e5));
+  const perDay   = ((goal - total) / daysLeft).toFixed(1);
+  return `Noch <b>${goal - total}</b> Einheiten in <b>${daysLeft}</b> Tagen · <b>${perDay}</b> pro Tag · ${lage}`;
+}
+
 function updatePace(total = TEAMS.reduce((s,t) => s + (counts[t.key] || 0), 0)){
   const span    = END - START;
   const elapsed = clamp(Date.now() - START, 0, span);
-  const target  = Math.round((elapsed / span) * GOAL);
 
   $("pacer").hidden = false;
-  $("pacer").style.left = `${(target / GOAL) * 100}%`;
+  $("pacer").style.left = `${(elapsed / span) * 100}%`;
 
-  const diff = total - target;
-  const lage = diff > 0 ? `<b>${diff}</b> Einheiten im Vorsprung`
-             : diff < 0 ? `<b>${-diff}</b> Einheiten hinter dem Tagesziel`
-             : `genau im Tagesziel`;
+  $("pace").innerHTML = paceLine(total, GOAL, {
+    ahead:   "Einheiten im Vorsprung",
+    behind:  "Einheiten hinter dem Tagesziel",
+    even:    "genau im Tagesziel",
+    reached: "Ziel erreicht.",
+    done:    "Geschafft."
+  });
 
-  const gap = total - RESCUE;
-  $("rescue").innerHTML =
-      gap > 0 ? `Notfallziel ${RESCUE} · <b>${gap}</b> Einheiten im Vorsprung zum Notfall`
-    : gap < 0 ? `Notfallziel ${RESCUE} · <b>${-gap}</b> Einheiten hinter dem Notfallziel`
-    :           `Notfallziel ${RESCUE} · genau erreicht`;
-
-  if (Date.now() >= END){
-    $("pace").innerHTML = total >= GOAL
-      ? `<b>Geschafft.</b> ${total} von ${GOAL} Einheiten.`
-      : `Zeit abgelaufen bei <b>${total}</b> von ${GOAL} Einheiten.`;
-    return;
-  }
-  if (total >= GOAL){
-    $("pace").innerHTML = `<b>Ziel erreicht.</b> ${total} von ${GOAL} · ${lage}`;
-    return;
-  }
-  const daysLeft = Math.max(1, Math.ceil((END - Date.now()) / 864e5));
-  const perDay   = ((GOAL - total) / daysLeft).toFixed(1);
-  $("pace").innerHTML =
-    `Noch <b>${GOAL - total}</b> Einheiten in <b>${daysLeft}</b> Tagen · <b>${perDay}</b> pro Tag · ${lage}`;
+  $("rescue").innerHTML = `Notfallziel ${RESCUE} · ` + paceLine(total, RESCUE, {
+    ahead:   "Einheiten im Vorsprung zum Notfall",
+    behind:  "Einheiten hinter dem Notfallziel",
+    even:    "genau im Notfall-Tagesziel",
+    reached: "Notfallziel erreicht.",
+    done:    "Notfallziel geschafft."
+  });
 }
 
 function setState(text, kind){
